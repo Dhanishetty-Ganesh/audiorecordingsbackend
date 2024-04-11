@@ -1,5 +1,5 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const mysql = require('mysql');
 const cors = require('cors');
 
 const app = express();
@@ -7,10 +7,21 @@ const port = 3001;
 
 app.use(cors());
 
-const db = new sqlite3.Database('transcriptions.db');
+// MySQL database connection configuration
+const db = mysql.createConnection({
+    user: "root",
+    host: "localhost",
+    password: "",
+    database: "recordings"
+});
 
-db.serialize(() => {
-  db.run("CREATE TABLE IF NOT EXISTS transcriptions (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT)");
+// Connect to MySQL database
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to MySQL database:', err.message);
+    return;
+  }
+  console.log('Connected to MySQL database');
 });
 
 // Handle upload
@@ -24,7 +35,8 @@ app.post('/upload', (req, res) => {
   req.on('end', () => {
     const text = JSON.parse(body).text;
 
-    db.run('INSERT INTO transcriptions (text) VALUES (?)', [text], (err) => {
+    // Insert into transcriptions table
+    db.query('INSERT INTO transcriptions (text) VALUES (?)', [text], (err, result) => {
       if (err) {
         console.error('Error inserting text:', err.message);
         res.status(500).send('Internal Server Error');
@@ -38,7 +50,8 @@ app.post('/upload', (req, res) => {
 
 // Retrieve recordings list
 app.get('/recordings', (req, res) => {
-  db.all('SELECT * FROM transcriptions', (err, rows) => {
+  // Select all rows from transcriptions table
+  db.query('SELECT * FROM transcriptions', (err, rows) => {
     if (err) {
       console.error('Error retrieving recordings:', err.message);
       res.status(500).send('Internal Server Error');
@@ -52,7 +65,8 @@ app.get('/recordings', (req, res) => {
 app.delete('/recordings/:id', (req, res) => {
   const id = req.params.id;
 
-  db.run('DELETE FROM transcriptions WHERE id = ?', [id], (err) => {
+  // Delete from transcriptions table where id matches
+  db.query('DELETE FROM transcriptions WHERE id = ?', [id], (err, result) => {
     if (err) {
       console.error('Error deleting recording:', err.message);
       res.status(500).send('Internal Server Error');
@@ -66,4 +80,3 @@ app.delete('/recordings/:id', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
