@@ -49,6 +49,11 @@ app.post('/upload', (req, res) => {
   });
 });
 
+app.get("/",(req,res) => {
+  res.send("hiiiiii")
+})
+
+
 // Retrieve recordings list
 app.get('/recordings', (req, res) => {
   // Select all rows from transcriptions table
