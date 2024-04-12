@@ -50,7 +50,7 @@ app.post('/upload', (req, res) => {
 });
 
 app.get("/",(req,res) => {
-  res.send("hiiiiii")
+  res.send("hello World")
 })
 
 
